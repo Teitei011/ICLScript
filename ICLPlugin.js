@@ -10,20 +10,34 @@ var config = {
     description: "Plugin para acessar conteúdos educacionais do ICL",
     author: "ICL Community",
     authorUrl: "https://icl.com.br",
-    sourceUrl: "https://membro.icl.com.br/ICLPlugin.json",
-    repositoryUrl: "",
+    
+    sourceUrl: "https://membro.icl.com.br/ICLConfig.json",
+    repositoryUrl: "https://github.com/iclcommunity/grayjay-icl",
     scriptUrl: "./ICLPlugin.js",
     version: 1,
+    
     iconUrl: "https://membro.icl.com.br/app/uploads/2024/03/cropped-favicon-192x192.png",
-    id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    
+    id: "b3bcdda8-6ed1-4bcd-a6d9-e5fb5c3d62a8",
+    
+    scriptSignature: "",
+    scriptPublicKey: "",
+    
     packages: ["Http", "DOMParser"],
+    
     allowEval: false,
-    allowUrls: ["membro.icl.com.br"]
+    
+    allowUrls: [
+        "membro.icl.com.br"
+    ]
 };
 
-// ---------- SOURCE ----------
+// ============================================
+// SOURCE IMPLEMENTATION
+// ============================================
 var source = {
-    enable: function(conf, settings, savedState) {
+    
+    enable: function(config, settings, savedState) {
         this.baseUrl = "https://membro.icl.com.br";
         log("ICL Plugin enabled");
     },
@@ -32,18 +46,16 @@ var source = {
         log("Getting home page");
         
         try {
-            var html = http.GET(this.baseUrl, {}, false).body;
+            var resp = http.GET(this.baseUrl, {}, false);
+            var html = resp.body;
             var results = [];
             
-            // Parse sections
             var sectionIds = ["entretenimento", "favoritos", "emprogresso", "novos"];
             
             for (var i = 0; i < sectionIds.length; i++) {
-                var sectionId = sectionIds[i];
-                var sectionHtml = this.extractSection(html, sectionId);
-                
+                var sectionHtml = this.extractSectionById(html, sectionIds[i]);
                 if (sectionHtml) {
-                    var videos = this.parseVideoList(sectionHtml);
+                    var videos = this.parseVideoItems(sectionHtml);
                     for (var j = 0; j < videos.length; j++) {
                         results.push(videos[j]);
                     }
@@ -71,12 +83,12 @@ var source = {
     },
     
     search: function(query, type, order, filters) {
-        log("Searching for: " + query);
+        log("Searching: " + query);
         
         try {
             var searchUrl = this.baseUrl + "/?s=" + encodeURIComponent(query);
-            var html = http.GET(searchUrl, {}, false).body;
-            var results = this.parseVideoList(html);
+            var resp = http.GET(searchUrl, {}, false);
+            var results = this.parseVideoItems(resp.body);
             
             return new VideoPager(results, false);
             
@@ -90,9 +102,6 @@ var source = {
         return this.search(query, type, order, filters);
     },
     
-    // ========================================
-    // CHANNELS (NOT SUPPORTED)
-    // ========================================
     isChannelUrl: function(url) {
         return false;
     },
@@ -105,80 +114,62 @@ var source = {
         throw new ScriptException("Channels not supported");
     },
     
-    // ========================================
-    // CONTENT DETAILS
-    // ========================================
     isContentDetailsUrl: function(url) {
-        return url.indexOf("/curso/") !== -1 || 
-               url.indexOf("/watch/") !== -1 ||
-               url.indexOf("/aula/") !== -1 ||
-               url.indexOf("/episodio/") !== -1;
+        return url.indexOf("/curso/") >= 0 || 
+               url.indexOf("/watch/") >= 0 ||
+               url.indexOf("/aula/") >= 0 ||
+               url.indexOf("/episodio/") >= 0;
     },
     
     getContentDetails: function(url) {
-        log("Getting content details for: " + url);
+        log("Getting content details: " + url);
         
         try {
-            // Direct video URLs
-            if (url.indexOf("/episodio/") !== -1 || url.indexOf("/aula/") !== -1) {
-                return this.getVideoDetails(url);
+            if (url.indexOf("/episodio/") >= 0 || url.indexOf("/aula/") >= 0) {
+                return this.getVideoContent(url);
             }
             
-            var html = http.GET(url, {}, false).body;
+            var resp = http.GET(url, {}, false);
+            var html = resp.body;
             
-            // Extract basic info
             var title = this.extractTitle(html);
             var description = this.extractDescription(html);
             var thumbnail = this.extractThumbnail(html);
             
-            // Course pages with lessons
-            if (url.indexOf("/curso/") !== -1) {
-                var lessons = this.extractLessons(html);
-                return this.buildSeriesDetails(title, description, thumbnail, url, lessons);
+            if (url.indexOf("/curso/") >= 0) {
+                var lessons = this.extractLessonList(html);
+                return this.buildSeriesContent(title, description, thumbnail, url, lessons);
             }
             
-            // Watch pages redirect to episode
-            if (url.indexOf("/watch/") !== -1) {
-                var episodeUrl = this.extractEpisodeUrl(html);
+            if (url.indexOf("/watch/") >= 0) {
+                var episodeUrl = this.findEpisodeUrl(html);
                 if (episodeUrl) {
-                    return this.getVideoDetails(episodeUrl);
+                    return this.getVideoContent(episodeUrl);
                 }
             }
             
-            // Fallback
-            return this.buildVideoDetails(title, description, thumbnail, url, []);
+            return this.buildVideoContent(title, description, thumbnail, url, []);
             
         } catch (e) {
             log("Error in getContentDetails: " + e);
-            throw new ScriptException("Failed to get content details");
+            throw new ScriptException("Failed to get content");
         }
     },
     
-    // ========================================
-    // VIDEO DETAILS
-    // ========================================
-    getVideoDetails: function(url) {
-        log("Getting video details for: " + url);
+    getVideoContent: function(url) {
+        log("Getting video: " + url);
         
-        try {
-            var html = http.GET(url, {}, false).body;
-            
-            var title = this.extractTitle(html);
-            var description = this.extractDescription(html);
-            var thumbnail = this.extractThumbnail(html);
-            var videoSources = this.extractVideoSources(html);
-            
-            return this.buildVideoDetails(title, description, thumbnail, url, videoSources);
-            
-        } catch (e) {
-            log("Error in getVideoDetails: " + e);
-            throw new ScriptException("Failed to get video details");
-        }
+        var resp = http.GET(url, {}, false);
+        var html = resp.body;
+        
+        var title = this.extractTitle(html);
+        var description = this.extractDescription(html);
+        var thumbnail = this.extractThumbnail(html);
+        var sources = this.extractVideoSources(html);
+        
+        return this.buildVideoContent(title, description, thumbnail, url, sources);
     },
     
-    // ========================================
-    // HELPER: EXTRACT TITLE
-    // ========================================
     extractTitle: function(html) {
         var match = html.match(/<h1[^>]*class="entry-title"[^>]*>(.*?)<\/h1>/s);
         if (!match) {
@@ -186,60 +177,45 @@ var source = {
         }
         
         if (match) {
-            var title = this.cleanHtml(match[1]);
-            // Remove site name after dash
-            var dashIndex = title.indexOf('–');
-            if (dashIndex !== -1) {
-                title = title.substring(0, dashIndex);
+            var title = this.stripHtml(match[1]);
+            var dash = title.indexOf('–');
+            if (dash >= 0) {
+                title = title.substring(0, dash);
             }
-            return title.trim();
+            return title.replace(/\s+/g, ' ').trim();
         }
         
         return "Sem Título";
     },
     
-    // ========================================
-    // HELPER: EXTRACT DESCRIPTION
-    // ========================================
     extractDescription: function(html) {
         var match = html.match(/<div[^>]*class="description"[^>]*>(.*?)<\/div>/s);
         if (!match) {
             match = html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
         }
-        
-        return match ? this.cleanHtml(match[1]) : "";
+        return match ? this.stripHtml(match[1]) : "";
     },
     
-    // ========================================
-    // HELPER: EXTRACT THUMBNAIL
-    // ========================================
     extractThumbnail: function(html) {
-        // Try poster first
         var match = html.match(/data-poster=['"]([^'"]*)['"]/);
         if (match) return match[1];
         
-        // Try any image in uploads
-        match = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
+        match = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|png|webp)[^'"]*)['"]/i);
         return match ? match[1] : "";
     },
     
-    // ========================================
-    // HELPER: EXTRACT VIDEO SOURCES
-    // ========================================
     extractVideoSources: function(html) {
         var sources = [];
         
-        // HLS source
         var hlsMatch = html.match(/const source = ['"]([^'"]*\.m3u8[^'"]*)['"]/);
         if (hlsMatch) {
             sources.push(new HLSSource({
-                name: "HLS Stream",
+                name: "HLS",
                 duration: 0,
                 url: hlsMatch[1]
             }));
         }
         
-        // MP4 fallback
         var mp4Match = html.match(/video\.src = ['"]([^'"]*\.mp4[^'"]*)['"]/);
         if (mp4Match) {
             sources.push(new VideoUrlSource({
@@ -256,10 +232,7 @@ var source = {
         return sources;
     },
     
-    // ========================================
-    // HELPER: EXTRACT LESSONS
-    // ========================================
-    extractLessons: function(html) {
+    extractLessonList: function(html) {
         var lessons = [];
         var regex = /<div class="ld-item-list-item[^>]*>[\s\S]*?href=['"]([^'"]*\/aula\/[^'"]*)['"]/g;
         var match;
@@ -267,38 +240,26 @@ var source = {
         while ((match = regex.exec(html)) !== null) {
             var lessonUrl = match[1];
             var titleMatch = match[0].match(/<div class="ld-item-title">(.*?)<\/div>/s);
-            var title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Aula";
+            var title = titleMatch ? this.stripHtml(titleMatch[1]) : "Aula";
             
-            lessons.push({
-                url: lessonUrl,
-                title: title
-            });
+            lessons.push({ url: lessonUrl, title: title });
         }
         
         return lessons;
     },
     
-    // ========================================
-    // HELPER: EXTRACT EPISODE URL
-    // ========================================
-    extractEpisodeUrl: function(html) {
+    findEpisodeUrl: function(html) {
         var match = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
         return match ? match[1] : null;
     },
     
-    // ========================================
-    // HELPER: EXTRACT SECTION
-    // ========================================
-    extractSection: function(html, sectionId) {
+    extractSectionById: function(html, sectionId) {
         var regex = new RegExp('<section[^>]*id="' + sectionId + '"[^>]*>([\\s\\S]*?)<\\/section>', 'i');
         var match = html.match(regex);
         return match ? match[1] : null;
     },
     
-    // ========================================
-    // HELPER: PARSE VIDEO LIST
-    // ========================================
-    parseVideoList: function(html) {
+    parseVideoItems: function(html) {
         var results = [];
         var regex = /<li[^>]*class="[^"]*(?:slide__item|bb-course-item-wrap)[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
         var match;
@@ -306,24 +267,20 @@ var source = {
         while ((match = regex.exec(html)) !== null) {
             var item = match[1];
             
-            // Extract URL
             var urlMatch = item.match(/href=['"]([^'"]*(?:curso|watch|aula|episodio)[^'"]*)['"]/);
             if (!urlMatch) continue;
             
             var url = urlMatch[1];
             
-            // Extract title
             var titleMatch = item.match(/title=['"]([^'"]*)['"]/i);
             if (!titleMatch) {
                 titleMatch = item.match(/<h[23][^>]*class="[^"]*title[^"]*"[^>]*>(.*?)<\/h[23]>/i);
             }
-            var title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Sem Título";
+            var title = titleMatch ? this.stripHtml(titleMatch[1]) : "Sem Título";
             
-            // Extract thumbnail
-            var thumbMatch = item.match(/src=['"]([^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
+            var thumbMatch = item.match(/src=['"]([^'"]*\.(?:jpg|png|webp)[^'"]*)['"]/i);
             var thumbnail = thumbMatch ? thumbMatch[1] : "";
             
-            // Create video object
             results.push(new PlatformVideo({
                 id: new PlatformID("ICL", url, config.id),
                 name: title,
@@ -345,10 +302,7 @@ var source = {
         return results;
     },
     
-    // ========================================
-    // HELPER: BUILD VIDEO DETAILS
-    // ========================================
-    buildVideoDetails: function(title, description, thumbnail, url, videoSources) {
+    buildVideoContent: function(title, description, thumbnail, url, videoSources) {
         return new PlatformVideoDetails({
             id: new PlatformID("ICL", url, config.id),
             name: title,
@@ -370,10 +324,7 @@ var source = {
         });
     },
     
-    // ========================================
-    // HELPER: BUILD SERIES DETAILS
-    // ========================================
-    buildSeriesDetails: function(title, description, thumbnail, url, lessons) {
+    buildSeriesContent: function(title, description, thumbnail, url, lessons) {
         var contents = [];
         
         for (var i = 0; i < lessons.length; i++) {
@@ -419,10 +370,7 @@ var source = {
         });
     },
     
-    // ========================================
-    // HELPER: CLEAN HTML
-    // ========================================
-    cleanHtml: function(html) {
+    stripHtml: function(html) {
         return html
             .replace(/<[^>]*>/g, '')
             .replace(/&nbsp;/g, ' ')
@@ -438,4 +386,4 @@ var source = {
     }
 };
 
-log("ICL Plugin loaded successfully");
+log("ICL Plugin loaded");
