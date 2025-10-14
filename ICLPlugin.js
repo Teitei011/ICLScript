@@ -1,8 +1,8 @@
 // ---------- CONFIG ----------
-const PLATFORM = 'ICL';
-const PLATFORM_CLAIMTYPE = 9999;
+var  PLATFORM = 'ICL';
+var  PLATFORM_CLAIMTYPE = 9999;
 
-const config = {
+var  config = {
     id: 'ICL',
     name: 'Instituto Conhecimento Liberta',
     description: 'Plugin para acessar conteúdos educacionais do ICL',
@@ -47,11 +47,11 @@ var source = {
     
     getHome: function() {
         log("Getting ICL home");
-        const html = http.GET(this.baseUrl, {}, false).body;
-        const results = [];
+        var  html = http.GET(this.baseUrl, {}, false).body;
+        var  results = [];
         
         ["entretenimento", "favoritos", "emprogresso", "novos"].forEach(sectionId => {
-            const section = this.extractSection(html, 'id="' + sectionId + '"');
+            var  section = this.extractSection(html, 'id="' + sectionId + '"');
             if (section) {
                 results.push(...this.parseVideoList(section));
             }
@@ -74,9 +74,9 @@ var source = {
     
     search: function(query, type, order, filters) {
         log("Searching: " + query);
-        const searchUrl = this.baseUrl + "/?s=" + encodeURIComponent(query);
-        const html = http.GET(searchUrl, {}, false).body;
-        const results = this.parseVideoList(html);
+        var  searchUrl = this.baseUrl + "/?s=" + encodeURIComponent(query);
+        var  html = http.GET(searchUrl, {}, false).body;
+        var  results = this.parseVideoList(html);
         return new VideoPager(results, false);
     },
     
@@ -110,26 +110,26 @@ var source = {
             return this.getVideoDetails(url);
         }
         
-        const html = http.GET(url, {}, false).body;
+        var  html = http.GET(url, {}, false).body;
         
-        const titleMatch = html.match(/<h1[^>]*class="entry-title"[^>]*>(.*?)<\/h1>/s) ||
+        var  titleMatch = html.match(/<h1[^>]*class="entry-title"[^>]*>(.*?)<\/h1>/s) ||
                           html.match(/<title>(.*?)<\/title>/);
-        const title = titleMatch ? this.cleanHtml(titleMatch[1].split('–')[0]) : "Untitled";
+        var  title = titleMatch ? this.cleanHtml(titleMatch[1].split('–')[0]) : "Untitled";
         
-        const descMatch = html.match(/<div[^>]*class="description"[^>]*>(.*?)<\/div>/s) ||
+        var  descMatch = html.match(/<div[^>]*class="description"[^>]*>(.*?)<\/div>/s) ||
                          html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
-        const description = descMatch ? this.cleanHtml(descMatch[1]) : "";
+        var  description = descMatch ? this.cleanHtml(descMatch[1]) : "";
         
-        const thumbMatch = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
-        const thumbnail = thumbMatch ? thumbMatch[1] : "";
+        var  thumbMatch = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
+        var  thumbnail = thumbMatch ? thumbMatch[1] : "";
         
         if (url.includes("/curso/")) {
-            const lessons = this.extractLessons(html, url);
+            var  lessons = this.extractLessons(html, url);
             return this.createSeriesDetails(title, description, thumbnail, url, lessons);
         }
         
         if (url.includes("/watch/")) {
-            const episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
+            var  episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
             if (episodeLink) {
                 return this.getVideoDetails(episodeLink[1]);
             }
@@ -140,21 +140,21 @@ var source = {
     
     getVideoDetails: function(url) {
         log("Getting video from: " + url);
-        const html = http.GET(url, {}, false).body;
+        var  html = http.GET(url, {}, false).body;
         
-        const titleMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/s);
-        const title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Video";
+        var  titleMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/s);
+        var  title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Video";
         
-        const descMatch = html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
-        const description = descMatch ? this.cleanHtml(descMatch[1]) : "";
+        var  descMatch = html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
+        var  description = descMatch ? this.cleanHtml(descMatch[1]) : "";
         
-        const posterMatch = html.match(/data-poster=['"]([^'"]*)['"]/);
-        const thumbnail = posterMatch ? posterMatch[1] : "";
+        var  posterMatch = html.match(/data-poster=['"]([^'"]*)['"]/);
+        var  thumbnail = posterMatch ? posterMatch[1] : "";
         
-        const hlsMatch = html.match(/const source = ['"]([^'"]*\.m3u8[^'"]*)['"]/);
-        const mp4Match = html.match(/video\.src = ['"]([^'"]*\.mp4[^'"]*)['"]/);
+        var  hlsMatch = html.match(/var  source = ['"]([^'"]*\.m3u8[^'"]*)['"]/);
+        var  mp4Match = html.match(/video\.src = ['"]([^'"]*\.mp4[^'"]*)['"]/);
         
-        const videoSources = [];
+        var  videoSources = [];
         
         if (hlsMatch) {
             videoSources.push(new HLSSource({
@@ -202,26 +202,26 @@ var source = {
         
         let videoUrl = url;
         if (url.includes("/watch/")) {
-            const html = http.GET(url, {}, false).body;
-            const episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
+            var  html = http.GET(url, {}, false).body;
+            var  episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
             if (episodeLink) {
                 videoUrl = episodeLink[1];
             }
         }
         
-        const html = http.GET(videoUrl, {}, false).body;
-        const hlsMatch = html.match(/const source = ['"]([^'"]*\.m3u8[^'"]*)['"]/);
+        var  html = http.GET(videoUrl, {}, false).body;
+        var  hlsMatch = html.match(/var  source = ['"]([^'"]*\.m3u8[^'"]*)['"]/);
         
         if (hlsMatch) {
-            const hlsUrl = hlsMatch[1];
-            const videoIdMatch = hlsUrl.match(/\/([^\/]+)\/playlist\.m3u8/);
+            var  hlsUrl = hlsMatch[1];
+            var  videoIdMatch = hlsUrl.match(/\/([^\/]+)\/playlist\.m3u8/);
             
             if (videoIdMatch) {
-                const videoId = videoIdMatch[1];
-                const baseUrl = hlsUrl.replace(/\/[^\/]+\/playlist\.m3u8/, '');
+                var  videoId = videoIdMatch[1];
+                var  baseUrl = hlsUrl.replace(/\/[^\/]+\/playlist\.m3u8/, '');
                 
-                const downloadSources = [];
-                const qualities = [
+                var  downloadSources = [];
+                var  qualities = [
                     { name: "2160p", height: 2160, width: 3840, filename: "play_2160p.mp4", bitrate: 15000000 },
                     { name: "1440p", height: 1440, width: 2560, filename: "play_1440p.mp4", bitrate: 10000000 },
                     { name: "1080p", height: 1080, width: 1920, filename: "play_1080p.mp4", bitrate: 5000000 },
@@ -231,7 +231,7 @@ var source = {
                 ];
                 
                 qualities.forEach(quality => {
-                    const downloadUrl = baseUrl + "/" + videoId + "/" + quality.filename;
+                    var  downloadUrl = baseUrl + "/" + videoId + "/" + quality.filename;
                     downloadSources.push(new VideoUrlSource({
                         url: downloadUrl,
                         name: "MP4 " + quality.name,
@@ -249,7 +249,7 @@ var source = {
             }
         }
         
-        const mp4Match = html.match(/video\.src = ['"]([^'"]*\.mp4[^'"]*)['"]/);
+        var  mp4Match = html.match(/video\.src = ['"]([^'"]*\.mp4[^'"]*)['"]/);
         if (mp4Match) {
             return new VideoSourceDescriptor([
                 new VideoUrlSource({
@@ -268,7 +268,7 @@ var source = {
     },
     
     createSeriesDetails: function(title, description, thumbnail, url, lessons) {
-        const contents = lessons.map((lesson, index) => {
+        var  contents = lessons.map((lesson, index) => {
             return new PlatformVideo({
                 id: new PlatformID(PLATFORM, lesson.url, config.id, PLATFORM_CLAIMTYPE),
                 name: lesson.title,
@@ -332,14 +332,14 @@ var source = {
     },
     
     extractLessons: function(html, courseUrl) {
-        const lessons = [];
-        const lessonRegex = /<div class="ld-item-list-item[^>]*>[\s\S]*?href=['"]([^'"]*\/aula\/[^'"]*)['"]/g;
+        var  lessons = [];
+        var  lessonRegex = /<div class="ld-item-list-item[^>]*>[\s\S]*?href=['"]([^'"]*\/aula\/[^'"]*)['"]/g;
         let match;
         
         while ((match = lessonRegex.exec(html)) !== null) {
-            const lessonUrl = match[1];
-            const titleMatch = match[0].match(/<div class="ld-item-title">(.*?)<\/div>/s);
-            const title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Lesson";
+            var  lessonUrl = match[1];
+            var  titleMatch = match[0].match(/<div class="ld-item-title">(.*?)<\/div>/s);
+            var  title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Lesson";
             
             lessons.push({
                 url: lessonUrl,
@@ -347,12 +347,12 @@ var source = {
             });
         }
         
-        const hasMorePages = html.includes('class="next ld-primary-color-hover"');
+        var  hasMorePages = html.includes('class="next ld-primary-color-hover"');
         if (hasMorePages && lessons.length > 0) {
-            const nextPageMatch = html.match(/href=['"]([^'"]*\?ld-lesson-page=2[^'"]*)['"]/);
+            var  nextPageMatch = html.match(/href=['"]([^'"]*\?ld-lesson-page=2[^'"]*)['"]/);
             if (nextPageMatch) {
                 try {
-                    const nextHtml = http.GET(nextPageMatch[1], {}, false).body;
+                    var  nextHtml = http.GET(nextPageMatch[1], {}, false).body;
                     lessons.push(...this.extractLessons(nextHtml, courseUrl));
                 } catch (e) {
                     log("Error fetching next page: " + e);
@@ -364,29 +364,29 @@ var source = {
     },
     
     extractSection: function(html, sectionId) {
-        const regex = new RegExp('<section[^>]*' + sectionId + '[^>]*>([\\s\\S]*?)<\\/section>', 'i');
-        const match = html.match(regex);
+        var  regex = new RegExp('<section[^>]*' + sectionId + '[^>]*>([\\s\\S]*?)<\\/section>', 'i');
+        var  match = html.match(regex);
         return match ? match[1] : null;
     },
     
     parseVideoList: function(html) {
-        const results = [];
-        const itemRegex = /<li[^>]*class="[^"]*(?:slide__item|bb-course-item-wrap)[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
+        var  results = [];
+        var  itemRegex = /<li[^>]*class="[^"]*(?:slide__item|bb-course-item-wrap)[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
         let match;
         
         while ((match = itemRegex.exec(html)) !== null) {
-            const item = match[1];
+            var  item = match[1];
             
-            const urlMatch = item.match(/href=['"]([^'"]*(?:curso|watch|aula|episodio)[^'"]*)['"]/);
+            var  urlMatch = item.match(/href=['"]([^'"]*(?:curso|watch|aula|episodio)[^'"]*)['"]/);
             if (!urlMatch) continue;
-            const url = urlMatch[1];
+            var  url = urlMatch[1];
             
-            const titleMatch = item.match(/title=['"]([^'"]*)['"]/i) ||
+            var  titleMatch = item.match(/title=['"]([^'"]*)['"]/i) ||
                               item.match(/<h[23][^>]*class="[^"]*title[^"]*"[^>]*>(.*?)<\/h[23]>/i);
-            const title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Untitled";
+            var  title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Untitled";
             
-            const thumbMatch = item.match(/src=['"]([^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
-            const thumbnail = thumbMatch ? thumbMatch[1] : "";
+            var  thumbMatch = item.match(/src=['"]([^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
+            var  thumbnail = thumbMatch ? thumbMatch[1] : "";
             
             results.push(new PlatformVideo({
                 id: new PlatformID(PLATFORM, url, config.id, PLATFORM_CLAIMTYPE),
