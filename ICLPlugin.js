@@ -3,72 +3,69 @@ var PLATFORM = "ICL";
 var PLATFORM_CLAIMTYPE = 9999;
 
 var config = {
-    id: "ICL",
     name: "Instituto Conhecimento Liberta",
     description: "Plugin para acessar conteúdos educacionais do ICL",
     author: "ICL Community",
     authorUrl: "https://icl.com.br",
-    sourceUrl: "https://membro.icl.com.br",
+    
+    sourceUrl: "https://membro.icl.com.br/ICLPlugin.json",
+    repositoryUrl: "",
     scriptUrl: "./ICLPlugin.js",
     version: 3,
+    
     iconUrl: "https://membro.icl.com.br/app/uploads/2024/03/cropped-favicon-192x192.png",
     
-    // CRITICAL: Grayjay doesn't use 'authentication' - it uses 'login'
-    login: {
-        loginUrl: "https://membro.icl.com.br/wp-login.php",
+    // CRITICAL: Must be a valid UUID
+    id: "309b2e83-7ede-4af8-8ee9-822bc4647a24",
+    
+    // Required for HTTP requests
+    packages: ["Http", "DOMParser"],
+    
+    allowEval: false,
+    
+    // CRITICAL: This is the correct way to specify allowed URLs
+    allowUrls: [
+        "membro.icl.com.br"
+    ],
+    
+    // REMOVED: 'login' should be 'authentication' according to docs
+    // Authentication structure based on Cookie auth
+    authentication: {
         completionUrl: "https://membro.icl.com.br/",
+        loginUrl: "https://membro.icl.com.br/wp-login.php",
         cookiesToFind: ["wordpress_logged_in"]
     },
-    
-    // CRITICAL: Constants must be defined at config level
-    constants: {
-        PLATFORM: "ICL"
-    },
-
-    capabilities: {
-        types: ["MEDIA_VIDEO_TYPE"],
-        sorts: ["SORT_CHRONOLOGICAL"],
-        filters: []
-    },
-
-    settings: [
-        {
-            variable: "preferredDownloadQuality",
-            name: "Qualidade de Download Preferida",
-            description: "Escolha a qualidade para downloads",
-            type: "dropdown",
-            default: "1080p",
-            options: ["2160p", "1440p", "1080p", "720p", "480p", "360p"]
-        }
-    ]
 };
 
 // ---------- SOURCE ----------
 var source = {
     enable: function(conf, settings, savedState) {
         this.baseUrl = "https://membro.icl.com.br";
-        this.preferredQuality = settings.preferredDownloadQuality || "1080p";
         log("ICL Plugin enabled");
     },
     
     getHome: function() {
         log("Getting ICL home");
-        var html = http.GET(this.baseUrl, {}, false).body;
-        var results = [];
-        var self = this;
-        
-        var sections = ["entretenimento", "favoritos", "emprogresso", "novos"];
-        for (var i = 0; i < sections.length; i++) {
-            var section = self.extractSection(html, 'id="' + sections[i] + '"');
-            if (section) {
-                var parsed = self.parseVideoList(section);
-                for (var j = 0; j < parsed.length; j++) {
-                    results.push(parsed[j]);
+        try {
+            var html = http.GET(this.baseUrl, {}, false).body;
+            var results = [];
+            
+            var sections = ["entretenimento", "favoritos", "emprogresso", "novos"];
+            for (var i = 0; i < sections.length; i++) {
+                var section = this.extractSection(html, 'id="' + sections[i] + '"');
+                if (section) {
+                    var parsed = this.parseVideoList(section);
+                    for (var j = 0; j < parsed.length; j++) {
+                        results.push(parsed[j]);
+                    }
                 }
             }
+            
+            return new VideoPager(results, false);
+        } catch (e) {
+            log("Error in getHome: " + e);
+            return new VideoPager([], false);
         }
-        
-        return new VideoPager(results, false);
     },
     
     searchSuggestions: function(query) {
@@ -77,18 +74,23 @@ var source = {
     
     getSearchCapabilities: function() {
         return {
-            types: ["MEDIA_VIDEO_TYPE"],
-            sorts: ["SORT_CHRONOLOGICAL"],
+            types: [Type.Feed.Mixed],
+            sorts: [Type.Order.Chronological],
             filters: []
         };
     },
     
     search: function(query, type, order, filters) {
         log("Searching: " + query);
-        var searchUrl = this.baseUrl + "/?s=" + encodeURIComponent(query);
-        var html = http.GET(searchUrl, {}, false).body;
-        var results = this.parseVideoList(html);
-        return new VideoPager(results, false);
+        try {
+            var searchUrl = this.baseUrl + "/?s=" + encodeURIComponent(query);
+            var html = http.GET(searchUrl, {}, false).body;
+            var results = this.parseVideoList(html);
+            return new VideoPager(results, false);
+        } catch (e) {
+            log("Error in search: " + e);
+            return new VideoPager([], false);
+        }
     },
     
     getSearchChannelContents: function(channelUrl, query, type, order, filters) {
@@ -103,7 +105,7 @@ var source = {
         throw new ScriptException("Channels not supported");
     },
     
-    getChannelContents: function(url) {
+    getChannelContents: function(url, type, order, filters) {
         throw new ScriptException("Channels not supported");
     },
     
@@ -117,36 +119,41 @@ var source = {
     getContentDetails: function(url) {
         log("Getting details: " + url);
         
-        if (url.indexOf("/episodio/") >= 0 || url.indexOf("/aula/") >= 0) {
-            return this.getVideoDetails(url);
-        }
-        
-        var html = http.GET(url, {}, false).body;
-        
-        var titleMatch = html.match(/<h1[^>]*class="entry-title"[^>]*>(.*?)<\/h1>/s) ||
-                          html.match(/<title>(.*?)<\/title>/);
-        var title = titleMatch ? this.cleanHtml(titleMatch[1].split('–')[0]) : "Untitled";
-        
-        var descMatch = html.match(/<div[^>]*class="description"[^>]*>(.*?)<\/div>/s) ||
-                         html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
-        var description = descMatch ? this.cleanHtml(descMatch[1]) : "";
-        
-        var thumbMatch = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
-        var thumbnail = thumbMatch ? thumbMatch[1] : "";
-        
-        if (url.indexOf("/curso/") >= 0) {
-            var lessons = this.extractLessons(html, url);
-            return this.createSeriesDetails(title, description, thumbnail, url, lessons);
-        }
-        
-        if (url.indexOf("/watch/") >= 0) {
-            var episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
-            if (episodeLink) {
-                return this.getVideoDetails(episodeLink[1]);
+        try {
+            if (url.indexOf("/episodio/") >= 0 || url.indexOf("/aula/") >= 0) {
+                return this.getVideoDetails(url);
             }
+            
+            var html = http.GET(url, {}, false).body;
+            
+            var titleMatch = html.match(/<h1[^>]*class="entry-title"[^>]*>(.*?)<\/h1>/s) ||
+                              html.match(/<title>(.*?)<\/title>/);
+            var title = titleMatch ? this.cleanHtml(titleMatch[1].split('–')[0]) : "Untitled";
+            
+            var descMatch = html.match(/<div[^>]*class="description"[^>]*>(.*?)<\/div>/s) ||
+                             html.match(/<div[^>]*class="episode_content_wrap"[^>]*>(.*?)<\/div>/s);
+            var description = descMatch ? this.cleanHtml(descMatch[1]) : "";
+            
+            var thumbMatch = html.match(/src=['"]([^'"]*uploads[^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
+            var thumbnail = thumbMatch ? thumbMatch[1] : "";
+            
+            if (url.indexOf("/curso/") >= 0) {
+                var lessons = this.extractLessons(html, url);
+                return this.createSeriesDetails(title, description, thumbnail, url, lessons);
+            }
+            
+            if (url.indexOf("/watch/") >= 0) {
+                var episodeLink = html.match(/href=['"]([^'"]*\/episodio\/[^'"]*)['"]/);
+                if (episodeLink) {
+                    return this.getVideoDetails(episodeLink[1]);
+                }
+            }
+            
+            return this.createBasicVideoDetails(title, description, thumbnail, url);
+        } catch (e) {
+            log("Error in getContentDetails: " + e);
+            throw new ScriptException("Failed to get content details: " + e);
         }
-        
-        return this.createBasicVideoDetails(title, description, thumbnail, url);
     },
     
     getVideoDetails: function(url) {
@@ -188,16 +195,16 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID(config.constants.PLATFORM, url, config.id),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
             ),
-            uploadDate: Math.floor(Date.now() / 1000),
+            datetime: Math.floor(Date.now() / 1000),
             duration: 0,
             viewCount: 0,
             url: url,
@@ -214,16 +221,16 @@ var source = {
         for (var i = 0; i < lessons.length; i++) {
             var lesson = lessons[i];
             contents.push(new PlatformVideo({
-                id: new PlatformID(config.constants.PLATFORM, lesson.url, config.id),
+                id: new PlatformID("ICL", lesson.url, config.id),
                 name: lesson.title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
+                    new PlatformID("ICL", this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
                     this.baseUrl,
                     ""
                 ),
-                uploadDate: Math.floor(Date.now() / 1000),
+                datetime: Math.floor(Date.now() / 1000),
                 duration: 0,
                 viewCount: 0,
                 url: lesson.url,
@@ -232,16 +239,16 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID(config.constants.PLATFORM, url, config.id),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
             ),
-            uploadDate: Math.floor(Date.now() / 1000),
+            datetime: Math.floor(Date.now() / 1000),
             duration: 0,
             viewCount: 0,
             url: url,
@@ -255,16 +262,16 @@ var source = {
     
     createBasicVideoDetails: function(title, description, thumbnail, url) {
         return new PlatformVideoDetails({
-            id: new PlatformID(config.constants.PLATFORM, url, config.id),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
             ),
-            uploadDate: Math.floor(Date.now() / 1000),
+            datetime: Math.floor(Date.now() / 1000),
             duration: 0,
             viewCount: 0,
             url: url,
@@ -320,16 +327,16 @@ var source = {
             var thumbnail = thumbMatch ? thumbMatch[1] : "";
             
             results.push(new PlatformVideo({
-                id: new PlatformID(config.constants.PLATFORM, url, config.id),
+                id: new PlatformID("ICL", url, config.id),
                 name: title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
+                    new PlatformID("ICL", this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
                     this.baseUrl,
                     ""
                 ),
-                uploadDate: Math.floor(Date.now() / 1000),
+                datetime: Math.floor(Date.now() / 1000),
                 duration: 0,
                 viewCount: 0,
                 url: url,
