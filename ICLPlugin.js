@@ -13,8 +13,13 @@ var config = {
     version: 3,
     iconUrl: "https://membro.icl.com.br/app/uploads/2024/03/cropped-favicon-192x192.png",
 
+    allowUrls: [
+        "https://membro.icl.com.br"
+    ],
+
+    // Fixed: use 'loginUrl' not 'userLoginUrl'
     authentication: {
-        userLoginUrl: "https://membro.icl.com.br/wp-login.php",
+        loginUrl: "https://membro.icl.com.br/wp-login.php",
         completionUrl: "https://membro.icl.com.br/",
         cookiesToFind: ["wordpress_logged_in"]
     },
@@ -42,7 +47,7 @@ var source = {
     enable: function(conf, settings, savedState) {
         this.baseUrl = "https://membro.icl.com.br";
         this.preferredQuality = settings.preferredDownloadQuality || "1080p";
-        log("ICL Plugin v3 enabled");
+        log("ICL Plugin enabled");
     },
     
     getHome: function() {
@@ -182,11 +187,11 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID(PLATFORM, url, config.id, PLATFORM_CLAIMTYPE),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(PLATFORM, this.baseUrl, config.id, PLATFORM_CLAIMTYPE),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -204,18 +209,17 @@ var source = {
     
     createSeriesDetails: function(title, description, thumbnail, url, lessons) {
         var contents = [];
-        var self = this;
         
         for (var i = 0; i < lessons.length; i++) {
             var lesson = lessons[i];
             contents.push(new PlatformVideo({
-                id: new PlatformID(PLATFORM, lesson.url, config.id, PLATFORM_CLAIMTYPE),
+                id: new PlatformID("ICL", lesson.url, config.id),
                 name: lesson.title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID(PLATFORM, self.baseUrl, config.id, PLATFORM_CLAIMTYPE),
+                    new PlatformID("ICL", this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
-                    self.baseUrl,
+                    this.baseUrl,
                     ""
                 ),
                 uploadDate: Math.floor(Date.now() / 1000),
@@ -227,11 +231,11 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID(PLATFORM, url, config.id, PLATFORM_CLAIMTYPE),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(PLATFORM, this.baseUrl, config.id, PLATFORM_CLAIMTYPE),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -250,11 +254,11 @@ var source = {
     
     createBasicVideoDetails: function(title, description, thumbnail, url) {
         return new PlatformVideoDetails({
-            id: new PlatformID(PLATFORM, url, config.id, PLATFORM_CLAIMTYPE),
+            id: new PlatformID("ICL", url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID(PLATFORM, this.baseUrl, config.id, PLATFORM_CLAIMTYPE),
+                new PlatformID("ICL", this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -274,12 +278,11 @@ var source = {
         var lessons = [];
         var lessonRegex = /<div class="ld-item-list-item[^>]*>[\s\S]*?href=['"]([^'"]*\/aula\/[^'"]*)['"]/g;
         var match;
-        var self = this;
         
         while ((match = lessonRegex.exec(html)) !== null) {
             var lessonUrl = match[1];
             var titleMatch = match[0].match(/<div class="ld-item-title">(.*?)<\/div>/s);
-            var title = titleMatch ? self.cleanHtml(titleMatch[1]) : "Lesson";
+            var title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Lesson";
             
             lessons.push({
                 url: lessonUrl,
@@ -300,7 +303,6 @@ var source = {
         var results = [];
         var itemRegex = /<li[^>]*class="[^"]*(?:slide__item|bb-course-item-wrap)[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
         var match;
-        var self = this;
         
         while ((match = itemRegex.exec(html)) !== null) {
             var item = match[1];
@@ -311,19 +313,19 @@ var source = {
             
             var titleMatch = item.match(/title=['"]([^'"]*)['"]/i) ||
                               item.match(/<h[23][^>]*class="[^"]*title[^"]*"[^>]*>(.*?)<\/h[23]>/i);
-            var title = titleMatch ? self.cleanHtml(titleMatch[1]) : "Untitled";
+            var title = titleMatch ? this.cleanHtml(titleMatch[1]) : "Untitled";
             
             var thumbMatch = item.match(/src=['"]([^'"]*\.(?:jpg|jpeg|png|webp)[^'"]*)['"]/i);
             var thumbnail = thumbMatch ? thumbMatch[1] : "";
             
             results.push(new PlatformVideo({
-                id: new PlatformID(PLATFORM, url, config.id, PLATFORM_CLAIMTYPE),
+                id: new PlatformID("ICL", url, config.id),
                 name: title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID(PLATFORM, self.baseUrl, config.id, PLATFORM_CLAIMTYPE),
+                    new PlatformID("ICL", this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
-                    self.baseUrl,
+                    this.baseUrl,
                     ""
                 ),
                 uploadDate: Math.floor(Date.now() / 1000),
