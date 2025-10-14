@@ -2,18 +2,21 @@
 var PLATFORM = "ICL";
 var PLATFORM_CLAIMTYPE = 9999;
 
+// ============================================
+// CONFIGURATION
+// ============================================
 var config = {
-    name: "Instituto Conhecimento Liberta",
-    description: "Plugin para acessar conteúdos educacionais do ICL",
-    author: "ICL Community",
+    name: "Test ICL",
+    description: "Test plugin",
+    author: "Test",
     authorUrl: "https://icl.com.br",
     
     // Public URL where this config will be hosted
-    sourceUrl: "https://membro.icl.com.br/ICLPlugin.json",
-    repositoryUrl: "https://github.com/yourrepo/icl-plugin",
+    sourceUrl: "http://192.168.1.100:3000/TestConfig.json",
+    repositoryUrl: "",
     
     // Script file reference
-    scriptUrl: "./ICLPlugin.js",
+    scriptUrl: "./TestScript.js",
     
     // Version number
     version: 1,
@@ -25,7 +28,7 @@ var config = {
     id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     
     // Required packages
-    packages: ["Http", "DOMParser"],
+    packages: ["Http"],
     
     // Security settings
     allowEval: false,
