@@ -6,44 +6,19 @@ var PLATFORM_CLAIMTYPE = 9999;
 // CONFIGURATION
 // ============================================
 var config = {
-    name: "Test ICL",
-    description: "Test plugin",
-    author: "Test",
+    name: "Instituto Conhecimento Liberta",
+    description: "Plugin para acessar conteúdos educacionais do ICL",
+    author: "ICL Community",
     authorUrl: "https://icl.com.br",
-    
-    // Public URL where this config will be hosted
-    sourceUrl: "http://192.168.1.100:3000/TestConfig.json",
+    sourceUrl: "https://membro.icl.com.br/ICLPlugin.json",
     repositoryUrl: "",
-    
-    // Script file reference
-    scriptUrl: "./TestScript.js",
-    
-    // Version number
+    scriptUrl: "./ICLPlugin.js",
     version: 1,
-    
-    // Icon URL
     iconUrl: "https://membro.icl.com.br/app/uploads/2024/03/cropped-favicon-192x192.png",
-    
-    // Unique UUID (generate new one from https://www.uuidgenerator.net/)
     id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    
-    // Required packages
-    packages: ["Http"],
-    
-    // Security settings
+    packages: ["Http", "DOMParser"],
     allowEval: false,
-    
-    // Allowed domains (without https://)
-    allowUrls: [
-        "membro.icl.com.br"
-    ],
-    
-    // Authentication configuration
-    authentication: {
-        loginUrl: "https://membro.icl.com.br/wp-login.php",
-        completionUrl: "https://membro.icl.com.br/",
-        cookiesToFind: ["wordpress_logged_in"]
-    }
+    allowUrls: ["membro.icl.com.br"]
 };
 
 // ---------- SOURCE ----------
