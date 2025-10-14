@@ -12,16 +12,17 @@ var config = {
     scriptUrl: "./ICLPlugin.js",
     version: 3,
     iconUrl: "https://membro.icl.com.br/app/uploads/2024/03/cropped-favicon-192x192.png",
-
-    allowUrls: [
-        "https://membro.icl.com.br"
-    ],
-
-    // Fixed: use 'loginUrl' not 'userLoginUrl'
-    authentication: {
+    
+    // CRITICAL: Grayjay doesn't use 'authentication' - it uses 'login'
+    login: {
         loginUrl: "https://membro.icl.com.br/wp-login.php",
         completionUrl: "https://membro.icl.com.br/",
         cookiesToFind: ["wordpress_logged_in"]
+    },
+    
+    // CRITICAL: Constants must be defined at config level
+    constants: {
+        PLATFORM: "ICL"
     },
 
     capabilities: {
@@ -187,11 +188,11 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID("ICL", url, config.id),
+            id: new PlatformID(config.constants.PLATFORM, url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID("ICL", this.baseUrl, config.id),
+                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -213,11 +214,11 @@ var source = {
         for (var i = 0; i < lessons.length; i++) {
             var lesson = lessons[i];
             contents.push(new PlatformVideo({
-                id: new PlatformID("ICL", lesson.url, config.id),
+                id: new PlatformID(config.constants.PLATFORM, lesson.url, config.id),
                 name: lesson.title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID("ICL", this.baseUrl, config.id),
+                    new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
                     this.baseUrl,
                     ""
@@ -231,11 +232,11 @@ var source = {
         }
         
         return new PlatformVideoDetails({
-            id: new PlatformID("ICL", url, config.id),
+            id: new PlatformID(config.constants.PLATFORM, url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID("ICL", this.baseUrl, config.id),
+                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -254,11 +255,11 @@ var source = {
     
     createBasicVideoDetails: function(title, description, thumbnail, url) {
         return new PlatformVideoDetails({
-            id: new PlatformID("ICL", url, config.id),
+            id: new PlatformID(config.constants.PLATFORM, url, config.id),
             name: title,
             thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
             author: new PlatformAuthorLink(
-                new PlatformID("ICL", this.baseUrl, config.id),
+                new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
                 "Instituto Conhecimento Liberta",
                 this.baseUrl,
                 ""
@@ -319,11 +320,11 @@ var source = {
             var thumbnail = thumbMatch ? thumbMatch[1] : "";
             
             results.push(new PlatformVideo({
-                id: new PlatformID("ICL", url, config.id),
+                id: new PlatformID(config.constants.PLATFORM, url, config.id),
                 name: title,
                 thumbnails: thumbnail ? new Thumbnails([new Thumbnail(thumbnail, 0)]) : new Thumbnails([]),
                 author: new PlatformAuthorLink(
-                    new PlatformID("ICL", this.baseUrl, config.id),
+                    new PlatformID(config.constants.PLATFORM, this.baseUrl, config.id),
                     "Instituto Conhecimento Liberta",
                     this.baseUrl,
                     ""
