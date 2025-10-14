@@ -1,6 +1,6 @@
 // ---------- CONFIG ----------
 const PLATFORM        = 'ICL';
-const PLATFORM_CLAIM  = 9999;
+const PLATFORM_CLAIMTYPE  = 9999;
 
 const config = {
     id            : 'ICL',
