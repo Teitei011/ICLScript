@@ -1,0 +1,34 @@
+{
+	"name": "Instituto Conhecimento Liberta",
+	"description": "Access series, documentaries and courses from Instituto Conhecimento Liberta (ICL)",
+	"author": "Custom Plugin",
+	"authorUrl": "https://github.com",
+
+	"sourceUrl": "https://plugins.grayjay.app/ICL/ICLConfig.json",
+	"repositoryUrl": "https://github.com",
+	"scriptUrl": "./ICLScript.js",
+	"version": 21,
+
+	"iconUrl": "./icl_icon.png",
+	"id": "8ca39e1f-df5e-40f7-827b-49525573b9cd",
+
+	"scriptSignature": "",
+	"scriptPublicKey": "",
+	"packages": ["Http", "DOMParser"],
+
+	"allowEval": false,
+	"allowUrls": [
+		"https://membro.icl.com.br/*"
+	],
+
+	"authentication": {
+		"userAgent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.153 Mobile Safari/537.36",
+		"loginUrl": "https://membro.icl.com.br/wp-login.php",
+		"completionUrl": "https://membro.icl.com.br",
+		"domainHeadersToFind": {
+			"membro.icl.com.br": ["Cookie"]
+		},
+		"cookiesToFind": ["wordpress_logged_in_4a71d44bee9204364bd1a057fad1f97c"],
+		"cookiesExclOthers": false
+	}
+}
