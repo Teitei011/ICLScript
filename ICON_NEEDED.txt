@@ -1,0 +1,35 @@
+ICON FILE NEEDED
+================
+
+The plugin requires an icon file named "icl_icon.png"
+
+Specifications:
+- File name: icl_icon.png
+- Recommended size: 512x512 pixels
+- Format: PNG with transparency support
+- Location: /home/teitei/Documents/ICL-Plugin/icl_icon.png
+
+Options to create the icon:
+
+1. Use ICL's existing logo/branding
+   - Visit https://membro.icl.com.br/
+   - Right-click on their logo and save image
+   - Resize to 512x512px if needed
+   - Save as icl_icon.png
+
+2. Create a simple icon
+   - Use GIMP, Inkscape, or online tools like Canva
+   - Create a 512x512px image with "ICL" text or related imagery
+   - Export as PNG
+
+3. Use a placeholder temporarily
+   - Download any 512x512 PNG image
+   - Rename to icl_icon.png
+   - Replace later with proper branding
+
+Until you add the icon:
+- The plugin will still work
+- It will just show without an icon in Grayjay
+- Or Grayjay might show a default/broken icon placeholder
+
+Note: The icon URL in ICLConfig.json is set to "./icl_icon.png"

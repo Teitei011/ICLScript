@@ -1,0 +1,11 @@
+# Netscape HTTP Cookie File
+
+membro.icl.com.br	FALSE	/episodio/decadencia-e-ruina-a-festa-mais-cara-da-historia	FALSE	1793479235	VideoTime_97107	557
+membro.icl.com.br	FALSE	/aula/capitulo-1-a-grande-transformacao-1830-1960	FALSE	1793479725	VideoTime_98660	1475
+membro.icl.com.br	FALSE	/app/plugins	TRUE	1763203235.632	wordpress_sec_4a71d44bee9204364bd1a057fad1f97c	stefantleal14%40gmail.com%7C1763160035%7CEA4R0qf5KG1YCTNnjjx21VHNC36RLnbAwloNkOPFNuo%7C9dc35e161093ca8949be9ed55e257dc82da882e627264ff8ca3566da05ae53d8
+membro.icl.com.br	FALSE	/wp-admin	TRUE	1763203235.632	wordpress_sec_4a71d44bee9204364bd1a057fad1f97c	stefantleal14%40gmail.com%7C1763160035%7CEA4R0qf5KG1YCTNnjjx21VHNC36RLnbAwloNkOPFNuo%7C9dc35e161093ca8949be9ed55e257dc82da882e627264ff8ca3566da05ae53d8
+membro.icl.com.br	FALSE	/	TRUE	0	wordpress_test_cookie	WP%20Cookie%20check
+membro.icl.com.br	FALSE	/	FALSE	1793478916	lessonpanel	closed
+membro.icl.com.br	FALSE	/	FALSE	1762550913	bb-notice	close
+membro.icl.com.br	FALSE	/	TRUE	0	wp_lang	pt_BR
+membro.icl.com.br	FALSE	/	TRUE	1763203235.632	wordpress_logged_in_4a71d44bee9204364bd1a057fad1f97c	stefantleal14%40gmail.com%7C1763160035%7CEA4R0qf5KG1YCTNnjjx21VHNC36RLnbAwloNkOPFNuo%7C59a919bafdeacb4b0cfd77334c955c9b4d1b1ca5ff1ac7ad8c3cceac072f40a6
